@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExpenseX - Verify OTP</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="/__/firebase/init.js" onerror="console.log('Firebase Hosting script not present, using client config');"></script>
+
+  <style>
+    :root {
+      --primary-color: #7c3aed;
+      --primary-dark: #6d28d9;
+      --bg-color: #7b5ac6;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 2.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .otp-container {
+      width: 100%;
+      max-width: 950px;
+      background-color: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .brand-header-center {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 1.5rem;
+    }
+
+    .brand-graphic {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .brand-text-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .brand-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--success);
+    }
+
+    .brand-name .x-accent {
+      color: var(--primary-color);
+    }
+
+    .brand-tagline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .brand-tagline .dash {
+      display: inline-block;
+      width: 10px;
+      height: 1px;
+      background-color: var(--primary-color);
+    }
+
+    .otp-content {
+      text-align: center;
+      padding: 1rem 0;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .icon-badge {
+      width: 60px;
+      height: 60px;
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+      font-size: 1.5rem;
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .otp-notice-box {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin: 1.25rem auto;
+      text-align: center;
+    }
+
+    .otp-notice-box strong {
+      letter-spacing: 3px;
+      font-size: 1.2rem;
+      color: #047857;
+      display: inline-block;
+      padding-left: 4px;
+    }
+
+    .error-box {
+      color: #b91c1c;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: none;
+      margin: 1rem auto;
+    }
+
+    .otp-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin: 1.75rem 0;
+    }
+
+    .otp-input {
+      width: 50px;
+      height: 55px;
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .otp-input:focus {
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .submit-btn {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.875rem;
+      background-color: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin: 1rem auto 0 auto;
+      display: block;
+    }
+
+    .submit-btn:hover {
+      background-color: #059669;
+    }
+
+    .link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="otp-container">
+    <header class="brand-header-center">
+      <div class="brand-graphic">
+        <svg viewBox="0 0 100 100" class="brand-svg">
+          <path d="M 46 14 A 32 32 0 1 0 74 62" fill="none" stroke="#10b981" stroke-width="6.5" stroke-linecap="round" />
+          <polygon points="46,6 46,22 34,14" fill="#10b981" />
+          <text x="44" y="58" text-anchor="middle" font-size="34" font-weight="900" fill="#10b981" font-family="'Poppins', sans-serif">₹</text>
+          <line x1="58" y1="46" x2="80" y2="24" stroke="#7c3aed" stroke-width="5.5" stroke-linecap="round" />
+          <polygon points="85,20 72,21 82,32" fill="#7c3aed" />
+          <path d="M 52 82 L 52 70 L 64 70 L 64 56 L 76 56 L 76 42 L 86 42 L 86 82 Z" fill="#7c3aed" />
+        </svg>
+      </div>
+      <div class="brand-text-wrapper">
+        <h1 class="brand-name">Expense<span class="x-accent">X</span></h1>
+        <p class="brand-tagline"><span class="dash"></span> Track Expenses. Manage Better. Save More. <span class="dash"></span></p>
+      </div>
+    </header>
+
+    <div class="otp-content">
+      <div class="icon-badge">🔒</div>
+
+      <header>
+        <h1 class="brand-title">OTP Verification</h1>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem;">
+          We've sent a 6-digit verification code to<br />
+          <strong style="color: var(--text-main);" id="userDestinationDisplay">user@example.com</strong>
+        </p>
+      </header>
+
+      <div id="otpNoticeBanner" class="otp-notice-box">
+        ✉️ Your verification code is: <strong id="otpDisplayNotice">123456</strong>
+      </div>
+
+      <div id="otpErrorAlert" class="error-box"></div>
+
+      <form id="otpForm">
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required />
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Didn't receive the code? 
+          <span id="timerWrapper">Resend in <strong style="color: var(--success);" id="countdown">00:45</strong></span>
+          <a href="#" class="link" id="resendBtn" style="display:none;" onclick="resendOtp(event)">Resend OTP</a>
+        </div>
+
+        <button type="submit" id="verifyBtn" class="submit-btn">Verify & Proceed</button>
+
+        <div style="margin-top: 1.5rem;">
+          <a href="register.html" class="link" style="font-size: 0.85rem;">← Change email / phone number</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/firebase-config.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      initFirebase();
+      initOtpScreen();
+    });
+
+    const inputs = document.querySelectorAll('.otp-input');
+    const resendBtn = document.getElementById('resendBtn');
+    const timerWrapper = document.getElementById('timerWrapper');
+    const countdownEl = document.getElementById('countdown');
+    const errorAlert = document.getElementById('otpErrorAlert');
+    const noticeBanner = document.getElementById('otpNoticeBanner');
+    const otpNoticeText = document.getElementById('otpDisplayNotice');
+    const userDestDisplay = document.getElementById('userDestinationDisplay');
+    const verifyBtn = document.getElementById('verifyBtn');
+
+    function initOtpScreen() {
+      // 1. Display destination (Email or Phone)
+      const savedEmail = localStorage.getItem('expenseX_email');
+      const savedPhone = localStorage.getItem('expenseX_phone');
+      const otpMethod = localStorage.getItem('expenseX_otp_method');
+
+      if (otpMethod === 'sms' && savedPhone) {
+        userDestDisplay.textContent = savedPhone;
+      } else if (savedEmail) {
+        userDestDisplay.textContent = savedEmail;
+      }
+
+      // 2. Load or generate pending OTP
+      let pendingOtp = localStorage.getItem('expenseX_pending_otp');
+      if (!pendingOtp) {
+        pendingOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        localStorage.setItem('expenseX_pending_otp', pendingOtp);
+      }
+
+      otpNoticeText.textContent = pendingOtp;
+      inputs[0].focus();
+      startTimer();
+    }
+
+    // Input navigation & single digit enforcement
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val;
+        hideError();
+        if (val && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+
+      // Handle paste of whole 6-digit OTP
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/[^0-9]/g, '');
+        if (pasteData.length > 0) {
+          const chars = pasteData.slice(0, inputs.length).split('');
+          chars.forEach((char, i) => {
+            if (inputs[i]) inputs[i].value = char;
+          });
+          const nextIndex = Math.min(chars.length, inputs.length - 1);
+          inputs[nextIndex].focus();
+        }
+      });
+    });
+
+    let timeLeft = 45;
+    let timerInterval;
+
+    function startTimer() {
+      timeLeft = 45;
+      resendBtn.style.display = 'none';
+      timerWrapper.style.display = 'inline';
+      clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        countdownEl.textContent = timeLeft < 10 ? `00:0${timeLeft}` : `00:${timeLeft}`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timerWrapper.style.display = 'none';
+          resendBtn.style.display = 'inline';
+        }
+      }, 1000);
+    }
+
+    function resendOtp(event) {
+      if (event) event.preventDefault();
+      inputs.forEach(input => input.value = '');
+      hideError();
+
+      // Generate a new 6-digit OTP
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      localStorage.setItem('expenseX_pending_otp', newOtp);
+      otpNoticeText.textContent = newOtp;
+
+      // Update in Firestore in background
+      const userKey = localStorage.getItem('expenseX_userkey');
+      if (userKey && window.firebase && window.firebase.firestore) {
+        try {
+          const db = firebase.firestore();
+          db.collection('users').doc(userKey).set({
+            otpCode: newOtp,
+            otpUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(err => console.warn(err));
+        } catch (e) {}
+      }
+
+      inputs[0].focus();
+      startTimer();
+    }
+
+    function showError(msg) {
+      errorAlert.textContent = msg;
+      errorAlert.style.display = 'block';
+    }
+
+    function hideError() {
+      errorAlert.style.display = 'none';
+    }
+
+    // OTP Verification Submit Handler
+    document.getElementById('otpForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideError();
+
+      let enteredOtp = '';
+      inputs.forEach(input => {
+        enteredOtp += input.value.trim();
+      });
+
+      if (enteredOtp.length !== 6) {
+        showError('Please enter the complete 6-digit OTP code.');
+        return;
+      }
+
+      const pendingOtp = localStorage.getItem('expenseX_pending_otp') || '123456';
+
+      if (enteredOtp !== pendingOtp) {
+        showError('Invalid OTP code. Please enter the correct 6-digit code shown above.');
+        inputs.forEach(input => input.value = '');
+        inputs[0].focus();
+        return;
+      }
+
+      // Verified successfully!
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = '✓ Verified! Entering ExpenseX...';
+
+      localStorage.setItem('expenseX_otp_verified', 'true');
+
+      // Update Firestore user verification status in background
+      const userKey = localStorage.getItem('expenseX_userkey');
+      if (userKey && window.firebase && window.firebase.firestore) {
+        try {
+          const db = firebase.firestore();
+          db.collection('users').doc(userKey).set({
+            otpVerified: true,
+            verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(err => console.warn('Firestore verification note:', err));
+        } catch (e) {}
+      }
+
+      // Smooth transition to dashboard
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 500);
+    });
+  </script>
+</body>
+</html>
